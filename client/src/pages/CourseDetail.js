@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  FiPlay, 
-  FiClock, 
-  FiUsers, 
-  FiStar, 
+import {
+  FiPlay,
+  FiClock,
+  FiUsers,
+  FiStar,
   FiBookOpen,
   FiCheckCircle,
   FiArrowRight,
@@ -15,6 +15,8 @@ import {
 import { useAuth } from '../context/AuthContext';
 import YouTubeVideo from '../components/YouTubeVideo';
 import LessonContent from '../components/LessonContent';
+import Quiz from '../components/Quiz';
+import CodeCompiler from '../components/CodeCompiler';
 import './CourseDetail.css';
 
 const CourseDetail = () => {
@@ -24,6 +26,8 @@ const CourseDetail = () => {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [completedLessons, setCompletedLessons] = useState([]);
+
 
   // Mock course data
   const mockCourse = {
@@ -124,6 +128,15 @@ const CourseDetail = () => {
     console.log('Starting course...');
   };
 
+  const handleLessonComplete = (lessonId, result) => {
+    if (result.type === 'quiz' && result.score >= 80) { // Check for a score of 80% or higher
+      setCompletedLessons([...completedLessons, lessonId]);
+    } else if (result.type === 'coding' && result.success) {
+      setCompletedLessons([...completedLessons, lessonId]);
+    }
+  };
+
+
   if (loading) {
     return (
       <div className="course-detail-loading">
@@ -148,7 +161,7 @@ const CourseDetail = () => {
   return (
     <div className="course-detail">
       <div className="container">
-        <motion.div 
+        <motion.div
           className="course-hero"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -161,11 +174,11 @@ const CourseDetail = () => {
                 <span>→</span>
                 <span>{course.category.replace('-', ' ')}</span>
               </div>
-              
+
               <h1 className="course-title">{course.title}</h1>
-              
+
               <p className="course-description">{course.description}</p>
-              
+
               <div className="course-meta">
                 <div className="meta-item">
                   <FiUsers />
@@ -185,10 +198,10 @@ const CourseDetail = () => {
                   </span>
                 </div>
               </div>
-              
+
               <div className="course-instructor">
-                <img 
-                  src={course.instructor.avatar} 
+                <img
+                  src={course.instructor.avatar}
                   alt={course.instructor.name}
                   className="instructor-avatar"
                 />
@@ -199,7 +212,7 @@ const CourseDetail = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="course-sidebar">
               <div className="course-card">
                 <div className="course-thumbnail">
@@ -208,7 +221,7 @@ const CourseDetail = () => {
                     <FiPlay />
                   </div>
                 </div>
-                
+
                 <div className="course-pricing">
                   <div className="price">
                     {course.price === 0 ? 'Free' : `$${course.price}`}
@@ -217,16 +230,16 @@ const CourseDetail = () => {
                     {course.price > 0 && '$199'}
                   </div>
                 </div>
-                
+
                 <div className="course-actions">
-                  <button 
+                  <button
                     className="btn btn-primary btn-large"
                     onClick={handleEnroll}
                   >
                     <FiBookOpen />
                     Enroll Now
                   </button>
-                  <button 
+                  <button
                     className="btn btn-outline"
                     onClick={handleStartLearning}
                   >
@@ -234,7 +247,7 @@ const CourseDetail = () => {
                     Start Learning
                   </button>
                 </div>
-                
+
                 <div className="course-features">
                   <div className="feature">
                     <FiCheckCircle />
@@ -249,7 +262,7 @@ const CourseDetail = () => {
                     <span>Mobile and desktop</span>
                   </div>
                 </div>
-                
+
                 <div className="course-share">
                   <button className="share-button">
                     <FiShare2 />
@@ -267,19 +280,19 @@ const CourseDetail = () => {
 
         <div className="course-content">
           <div className="course-tabs">
-            <button 
+            <button
               className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
             >
               Overview
             </button>
-            <button 
+            <button
               className={`tab-button ${activeTab === 'curriculum' ? 'active' : ''}`}
               onClick={() => setActiveTab('curriculum')}
             >
               Curriculum
             </button>
-            <button 
+            <button
               className={`tab-button ${activeTab === 'instructor' ? 'active' : ''}`}
               onClick={() => setActiveTab('instructor')}
             >
@@ -289,7 +302,7 @@ const CourseDetail = () => {
 
           <div className="tab-content">
             {activeTab === 'overview' && (
-              <motion.div 
+              <motion.div
                 className="overview-content"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -306,7 +319,7 @@ const CourseDetail = () => {
                     ))}
                   </ul>
                 </div>
-                
+
                 <div className="prerequisites">
                   <h3>Requirements</h3>
                   <ul>
@@ -322,46 +335,59 @@ const CourseDetail = () => {
             )}
 
             {activeTab === 'curriculum' && (
-              <motion.div 
+              <motion.div
                 className="curriculum-content"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
                 <div className="course-video-section">
-                  <YouTubeVideo 
+                  <YouTubeVideo
                     videoUrl="https://youtube.com/playlist?list=PLxgZQoSe9cg0U9A6mV-hztKBN_T9UL9Zq&si=_MT4pzYo4aRQJRJ1"
                     title="Complete Web Development Course Playlist"
                     description="Watch the complete course playlist on YouTube with all lessons and hands-on projects."
                   />
                 </div>
-                
+
                 <div className="lessons-list">
                   <h3 className="lessons-title">Course Lessons</h3>
-                  {course.lessons.map((lesson, index) => (
-                    <LessonContent 
-                      key={lesson.id || index}
-                      lesson={lesson}
-                      onComplete={(lessonId, result) => {
-                        console.log('Lesson completed:', lessonId, result);
-                        // Handle lesson completion
-                      }}
-                    />
-                  ))}
+                  {course.lessons.map((lesson, index) => {
+                    const isLocked = index > 0 && !completedLessons.includes(course.lessons[index - 1].id);
+                    return (
+                      <div key={lesson.id || index} className={`lesson-item ${isLocked ? 'locked' : ''}`}>
+                        <LessonContent
+                          lesson={lesson}
+                          onComplete={handleLessonComplete}
+                          isLocked={isLocked}
+                        />
+                        {lesson.type === 'quiz' && !isLocked && (
+                          <Quiz quiz={lesson.quiz} onComplete={(score) => handleLessonComplete(lesson.id, { type: 'quiz', score })} />
+                        )}
+                        {lesson.type === 'coding' && !isLocked && (
+                          <CodeCompiler
+                            template={lesson.codeTemplate}
+                            expectedOutput={lesson.expectedOutput}
+                            language={lesson.language}
+                            onComplete={(success) => handleLessonComplete(lesson.id, { type: 'coding', success })}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </motion.div>
             )}
 
             {activeTab === 'instructor' && (
-              <motion.div 
+              <motion.div
                 className="instructor-content"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
                 <div className="instructor-profile">
-                  <img 
-                    src={course.instructor.avatar} 
+                  <img
+                    src={course.instructor.avatar}
                     alt={course.instructor.name}
                     className="instructor-photo"
                   />

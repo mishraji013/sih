@@ -4,8 +4,14 @@ const Course = require('../models/Course');
 const Progress = require('../models/Progress');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { google } = require('googleapis');
 
 const router = express.Router();
+const youtube = google.youtube({
+  version: 'v3',
+  auth: process.env.YOUTUBE_API_KEY, // Make sure to add your YouTube API key to your .env file
+});
+
 
 // @route   GET /api/courses
 // @desc    Get all courses with filtering and search
@@ -125,6 +131,68 @@ router.post('/', auth, [
   }
 });
 
+// @route   POST /api/courses/playlist
+// @desc    Create a new course from a YouTube playlist
+// @access  Private (Instructor/Admin)
+router.post('/playlist', auth, [
+  body('playlistUrl').isURL().withMessage('A valid playlist URL is required'),
+  body('title').trim().isLength({ min: 5 }).withMessage('Title must be at least 5 characters'),
+  body('description').trim().isLength({ min: 20 }).withMessage('Description must be at least 20 characters'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const user = await User.findById(req.userId);
+    if (user.role !== 'instructor' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Instructor role required.' });
+    }
+
+    const { playlistUrl, title, description, category, level, language } = req.body;
+    const playlistId = new URL(playlistUrl).searchParams.get('list');
+
+    const playlistItems = await youtube.playlistItems.list({
+      part: 'snippet',
+      playlistId,
+      maxResults: 50, // You can adjust this limit
+    });
+
+    const lessons = playlistItems.data.items.map((item, index) => ({
+      title: item.snippet.title,
+      content: item.snippet.description,
+      type: 'video',
+      videoUrl: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+      order: index + 1,
+      isPublished: true,
+    }));
+
+    const courseData = {
+      title,
+      description,
+      instructor: req.userId,
+      category,
+      level,
+      language,
+      lessons,
+      isPublished: true,
+    };
+
+    const course = new Course(courseData);
+    await course.save();
+
+    res.status(201).json({
+      message: 'Course created successfully from playlist',
+      course,
+    });
+  } catch (error) {
+    console.error('Create playlist course error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 // @route   PUT /api/courses/:id
 // @desc    Update course
 // @access  Private (Instructor/Admin)
@@ -190,7 +258,7 @@ router.post('/:id/enroll', auth, async (req, res) => {
     }
 
     const user = await User.findById(req.userId);
-    
+
     // Check if already enrolled
     const alreadyEnrolled = user.enrolledCourses.some(
       enrolled => enrolled.course.toString() === req.params.id

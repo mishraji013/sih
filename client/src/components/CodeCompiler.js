@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import { FiPlay, FiRotateCcw, FiCheckCircle, FiXCircle, FiCopy, FiDownload } from 'react-icons/fi';
 import './CodeCompiler.css';
 
-const CodeCompiler = ({ 
-  template = '', 
-  expectedOutput = '', 
+const CodeCompiler = ({
+  template = '',
+  expectedOutput = '',
   language = 'javascript',
   onRun,
-  onComplete 
+  onComplete
 }) => {
   const [code, setCode] = useState(template);
   const [output, setOutput] = useState('');
@@ -36,6 +36,11 @@ const CodeCompiler = ({
       name: 'C++',
       mode: 'cpp',
       extension: 'cpp'
+    },
+    c: {
+        name: 'C',
+        mode: 'c',
+        extension: 'c'
     }
   };
 
@@ -45,13 +50,13 @@ const CodeCompiler = ({
     setIsRunning(true);
     setOutput('');
     setResult(null);
-    
+
     const startTime = Date.now();
-    
+
     try {
       // Simulate code execution
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Simple JavaScript execution simulation
       if (language === 'javascript') {
         try {
@@ -67,10 +72,10 @@ const CodeCompiler = ({
         // For other languages, simulate execution
         setOutput('Code executed successfully');
       }
-      
+
       const endTime = Date.now();
       setExecutionTime(endTime - startTime);
-      
+
       // Check if output matches expected result
       if (expectedOutput && output.includes(expectedOutput)) {
         setResult({ success: true, message: 'Great job! Your code is working correctly.' });
@@ -82,7 +87,7 @@ const CodeCompiler = ({
       } else {
         setResult({ success: true, message: 'Code executed successfully!' });
       }
-      
+
     } catch (error) {
       setOutput(`Execution Error: ${error.message}`);
       setResult({ success: false, message: error.message });
@@ -115,7 +120,7 @@ const CodeCompiler = ({
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="code-compiler"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -126,21 +131,21 @@ const CodeCompiler = ({
           <span className="language-badge">{currentLang.name}</span>
         </div>
         <div className="compiler-actions">
-          <button 
+          <button
             className="btn btn-outline btn-sm"
             onClick={copyCode}
             title="Copy Code"
           >
             <FiCopy />
           </button>
-          <button 
+          <button
             className="btn btn-outline btn-sm"
             onClick={downloadCode}
             title="Download Code"
           >
             <FiDownload />
           </button>
-          <button 
+          <button
             className="btn btn-outline btn-sm"
             onClick={resetCode}
             title="Reset Code"
@@ -192,7 +197,7 @@ const CodeCompiler = ({
       </div>
 
       <div className="compiler-footer">
-        <button 
+        <button
           className="btn btn-primary"
           onClick={runCode}
           disabled={isRunning || !code.trim()}
@@ -200,7 +205,7 @@ const CodeCompiler = ({
           <FiPlay />
           {isRunning ? 'Running...' : 'Run Code'}
         </button>
-        
+
         {result && (
           <div className={`result-message ${result.success ? 'success' : 'error'}`}>
             <div className="result-icon">

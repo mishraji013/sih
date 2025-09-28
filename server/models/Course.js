@@ -29,7 +29,7 @@ const lessonSchema = new mongoose.Schema({
   language: {
     type: String,
     default: 'javascript',
-    enum: ['javascript', 'python', 'java', 'cpp', 'html', 'css']
+    enum: ['javascript', 'python', 'java', 'cpp', 'html', 'css', 'c'] // Added 'c'
   },
   quiz: {
     title: String,
